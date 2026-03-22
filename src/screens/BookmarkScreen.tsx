@@ -1,24 +1,164 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { useColors, fonts, spacing } from '../utils/theme';
+import * as Haptics from 'expo-haptics';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useColors, fonts, spacing, radius } from '../utils/theme';
+import { useBookmarkStore } from '../store/bookmarkStore';
+import { bookById } from '../data/books';
+import type { RootStackParamList } from '../types/navigation';
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookmarkScreen() {
   const colors = useColors();
+  const navigation = useNavigation<NavProp>();
+  const { bookmarks, loadBookmarks, removeBookmark } = useBookmarkStore();
+
+  useEffect(() => {
+    loadBookmarks();
+  }, []);
+
+  const renderDeleteAction = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
+    return (
+      <View style={styles.deleteAction}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+        </Animated.View>
+      </View>
+    );
+  };
+
+  const renderItem = ({ item }: { item: typeof bookmarks[0] }) => {
+    const book = bookById[item.book];
+    const bookName = book?.name || item.book;
+
+    return (
+      <Swipeable
+        renderRightActions={renderDeleteAction}
+        onSwipeableOpen={() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          removeBookmark(item.book, item.chapter, item.verse);
+        }}
+        overshootRight={false}
+      >
+        <TouchableOpacity
+          style={[styles.bookmarkItem, { backgroundColor: colors.card }]}
+          onPress={() => navigation.navigate('Chapter', { bookId: item.book, chapter: item.chapter })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.bookmarkHeader}>
+            <Ionicons name="bookmark" size={16} color={colors.bookmarkColor} />
+            <Text style={[styles.reference, { color: colors.primary }]}>
+              {bookName} {item.chapter}:{item.verse}
+            </Text>
+          </View>
+          <Text style={[styles.verseText, { color: colors.textPrimary }]} numberOfLines={2}>
+            {item.text}
+          </Text>
+          <Text style={[styles.dateText, { color: colors.textMuted }]}>
+            {new Date(item.createdAt).toLocaleDateString('ko-KR')}
+          </Text>
+        </TouchableOpacity>
+      </Swipeable>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Ionicons name="bookmark-outline" size={48} color={colors.accent} />
-      <Text style={[styles.title, { color: colors.textPrimary }]}>책갈피</Text>
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        저장한 말씀이 여기에 표시됩니다
-      </Text>
+      <FlatList
+        data={bookmarks}
+        keyExtractor={(item) => `${item.book}-${item.chapter}-${item.verse}`}
+        renderItem={renderItem}
+        contentContainerStyle={bookmarks.length === 0 ? styles.emptyList : styles.listContent}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="bookmark-outline" size={48} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+              책갈피가 없습니다
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+              성경 구절을 길게 눌러 책갈피를 추가하세요
+            </Text>
+          </View>
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  title: { fontSize: fonts.sizes.xl, fontWeight: fonts.weights.bold, marginTop: spacing.md },
-  subtitle: { fontSize: fonts.sizes.md, marginTop: spacing.sm },
+  container: { flex: 1 },
+  listContent: { padding: spacing.md },
+  emptyList: { flex: 1 },
+  bookmarkItem: {
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bookmarkHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  reference: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.bold,
+  },
+  verseText: {
+    fontSize: fonts.sizes.md,
+    lineHeight: 24,
+    marginBottom: spacing.xs,
+  },
+  dateText: {
+    fontSize: fonts.sizes.xs,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: fonts.sizes.xl,
+    fontWeight: fonts.weights.bold,
+    marginTop: spacing.md,
+  },
+  emptySubtitle: {
+    fontSize: fonts.sizes.md,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  deleteAction: {
+    backgroundColor: '#E53935',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+  },
 });
