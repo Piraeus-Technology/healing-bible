@@ -75,6 +75,7 @@ export default function ChapterScreen() {
             setTranslation(translation === 'kjv' ? 'krv' : 'kjv');
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ marginRight: 8 }}
         >
           <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
             {translation === 'kjv' ? '한글' : 'KJV'}
