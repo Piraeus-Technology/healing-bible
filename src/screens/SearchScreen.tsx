@@ -67,7 +67,7 @@ export default function SearchScreen() {
         <Ionicons name="search" size={18} color={colors.textMuted} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder={translation === 'kjv' ? 'Search Bible verses...' : '성경 구절 검색...'}
+          placeholder="성경 구절 검색..."
           placeholderTextColor={colors.textMuted}
           value={query}
           onChangeText={setQuery}
@@ -85,8 +85,8 @@ export default function SearchScreen() {
       {query.trim().length >= 2 && (
         <Text style={[styles.resultCount, { color: colors.textMuted }]}>
           {results.length > 0
-            ? `${results.length}${results.length >= 50 ? '+' : ''} ${translation === 'kjv' ? 'results' : '결과'}`
-            : translation === 'kjv' ? 'No results' : '결과 없음'}
+            ? `${results.length}${results.length >= 50 ? '+' : ''} 결과`
+            : '결과 없음'}
         </Text>
       )}
 
@@ -101,7 +101,7 @@ export default function SearchScreen() {
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={48} color={colors.border} />
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                {translation === 'kjv' ? 'No results found' : '검색 결과가 없습니다'}
+                검색 결과가 없습니다
               </Text>
             </View>
           }
@@ -110,10 +110,10 @@ export default function SearchScreen() {
         <View style={styles.emptyContainer}>
           <Ionicons name="book-outline" size={48} color={colors.textMuted} />
           <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-            {translation === 'kjv' ? 'Bible Search' : '성경 검색'}
+            성경 검색
           </Text>
           <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-            {translation === 'kjv' ? 'Type at least 2 characters' : '두 글자 이상 입력하세요'}
+            두 글자 이상 입력하세요
           </Text>
         </View>
       )}
