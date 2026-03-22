@@ -9,12 +9,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { searchBible, SearchResult } from '../utils/search';
-import type { RootStackParamList } from '../types/navigation';
-
-type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 function highlightText(text: string, query: string, primaryColor: string, textColor: string) {
   if (!query.trim()) return <Text style={{ color: textColor }}>{text}</Text>;
@@ -37,7 +33,7 @@ function highlightText(text: string, query: string, primaryColor: string, textCo
 
 export default function SearchScreen() {
   const colors = useColors();
-  const navigation = useNavigation<NavProp>();
+  const navigation = useNavigation<any>();
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
@@ -48,7 +44,7 @@ export default function SearchScreen() {
   const renderItem = ({ item }: { item: SearchResult }) => (
     <TouchableOpacity
       style={[styles.resultItem, { backgroundColor: colors.card }]}
-      onPress={() => navigation.navigate('Chapter', { bookId: item.bookId, chapter: item.chapter })}
+      onPress={() => navigation.navigate('성경', { screen: 'Chapter', params: { bookId: item.bookId, chapter: item.chapter } })}
       activeOpacity={0.7}
     >
       <View style={styles.resultHeader}>

@@ -17,10 +17,40 @@ import HealingScreen from './src/screens/HealingScreen';
 import BookmarkScreen from './src/screens/BookmarkScreen';
 import MoreScreen from './src/screens/MoreScreen';
 
-import type { RootStackParamList, TabParamList } from './src/types/navigation';
+const BibleStack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<TabParamList>();
+function BibleStackNavigator() {
+  const colors = useColors();
+
+  return (
+    <BibleStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.card },
+        headerTintColor: colors.textPrimary,
+        headerTitleStyle: { fontWeight: fonts.weights.bold, color: colors.textPrimary },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <BibleStack.Screen
+        name="BibleHome"
+        component={BibleScreen}
+        options={{ title: '성경' }}
+      />
+      <BibleStack.Screen
+        name="ChapterSelect"
+        component={ChapterSelectScreen}
+        options={{ title: '' }}
+      />
+      <BibleStack.Screen
+        name="Chapter"
+        component={ChapterScreen}
+        options={{ title: '' }}
+      />
+    </BibleStack.Navigator>
+  );
+}
 
 function TabNavigator() {
   const colors = useColors();
@@ -40,8 +70,9 @@ function TabNavigator() {
     >
       <Tab.Screen
         name="성경"
-        component={BibleScreen}
+        component={BibleStackNavigator}
         options={{
+          headerShown: false,
           title: '성경',
           tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
@@ -84,7 +115,6 @@ function TabNavigator() {
 
 export default function App() {
   const { loadTheme } = useThemeStore();
-  const colors = useColors();
   const isDark = useThemeStore((s) => s.isDark);
 
   useEffect(() => {
@@ -95,31 +125,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         <StatusBar style={isDark ? 'light' : 'dark'} />
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.card },
-            headerTintColor: colors.textPrimary,
-            headerTitleStyle: { fontWeight: fonts.weights.bold, color: colors.textPrimary },
-            headerShadowVisible: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}
-        >
-          <Stack.Screen
-            name="MainTabs"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ChapterSelect"
-            component={ChapterSelectScreen}
-            options={{ title: '' }}
-          />
-          <Stack.Screen
-            name="Chapter"
-            component={ChapterScreen}
-            options={{ title: '' }}
-          />
-        </Stack.Navigator>
+        <TabNavigator />
       </NavigationContainer>
     </GestureHandlerRootView>
   );

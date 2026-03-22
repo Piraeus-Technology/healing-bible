@@ -11,17 +11,13 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { bookById } from '../data/books';
-import type { RootStackParamList } from '../types/navigation';
-
-type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookmarkScreen() {
   const colors = useColors();
-  const navigation = useNavigation<NavProp>();
+  const navigation = useNavigation<any>();
   const { bookmarks, loadBookmarks, removeBookmark } = useBookmarkStore();
 
   useEffect(() => {
@@ -61,7 +57,7 @@ export default function BookmarkScreen() {
       >
         <TouchableOpacity
           style={[styles.bookmarkItem, { backgroundColor: colors.card }]}
-          onPress={() => navigation.navigate('Chapter', { bookId: item.book, chapter: item.chapter })}
+          onPress={() => navigation.navigate('성경', { screen: 'Chapter', params: { bookId: item.book, chapter: item.chapter } })}
           activeOpacity={0.7}
         >
           <View style={styles.bookmarkHeader}>
