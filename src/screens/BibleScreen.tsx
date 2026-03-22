@@ -1,29 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   FlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
-import { books, oldTestament, newTestament } from '../data/books';
-import type { RootStackParamList } from '../types/navigation';
-
-type NavProp = NativeStackNavigationProp<RootStackParamList>;
+import { oldTestament, newTestament, bookById } from '../data/books';
+import { useSettingsStore } from '../store/settingsStore';
 
 export default function BibleScreen() {
   const colors = useColors();
-  const navigation = useNavigation<NavProp>();
+  const navigation = useNavigation<any>();
   const [testament, setTestament] = useState<'old' | 'new'>('old');
+  const { lastRead, loadSettings } = useSettingsStore();
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
   const currentBooks = testament === 'old' ? oldTestament : newTestament;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Continue reading */}
+      {lastRead && bookById[lastRead.bookId] && (
+        <TouchableOpacity
+          style={[styles.continueCard, { backgroundColor: colors.card }]}
+          onPress={() => navigation.navigate('Chapter', { bookId: lastRead.bookId, chapter: lastRead.chapter })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.continueLeft}>
+            <Ionicons name="book" size={20} color={colors.primary} />
+            <View style={styles.continueInfo}>
+              <Text style={[styles.continueLabel, { color: colors.textMuted }]}>이어 읽기</Text>
+              <Text style={[styles.continueTitle, { color: colors.textPrimary }]}>
+                {bookById[lastRead.bookId].name} {lastRead.chapter}장
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        </TouchableOpacity>
+      )}
+
       {/* Testament toggle */}
       <View style={[styles.toggleRow, { backgroundColor: colors.pillBg }]}>
         <TouchableOpacity
@@ -85,6 +107,37 @@ export default function BibleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  continueCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  continueLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  continueInfo: {},
+  continueLabel: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: fonts.weights.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  continueTitle: {
+    fontSize: fonts.sizes.lg,
+    fontWeight: fonts.weights.bold,
+    marginTop: 2,
+  },
   toggleRow: {
     flexDirection: 'row',
     margin: spacing.md,

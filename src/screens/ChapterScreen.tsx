@@ -40,7 +40,7 @@ export default function ChapterScreen() {
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
   const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
   const { getNote, saveNote, deleteNote, loadNotes } = useNoteStore();
-  const { fontSize, loadSettings } = useSettingsStore();
+  const { fontSize, loadSettings, setLastRead } = useSettingsStore();
 
   const [selectedVerse, setSelectedVerse] = useState<{ num: number; text: string } | null>(null);
   const [noteText, setNoteText] = useState('');
@@ -51,6 +51,7 @@ export default function ChapterScreen() {
     loadHighlights();
     loadNotes();
     loadSettings();
+    setLastRead(bookId, chapter);
   }, []);
 
   React.useLayoutEffect(() => {
