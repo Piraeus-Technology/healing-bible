@@ -53,8 +53,11 @@ export default function ChapterScreen() {
     loadHighlights();
     loadNotes();
     loadSettings();
-    setLastRead(bookId, chapter);
   }, []);
+
+  React.useEffect(() => {
+    setLastRead(bookId, chapter);
+  }, [bookId, chapter]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
