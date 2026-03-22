@@ -10,6 +10,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Share,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -312,6 +313,17 @@ export default function ChapterScreen() {
                     <Text style={[styles.actionText, { color: colors.textPrimary }]}>
                       {getNote(bookId, chapter, selectedVerse.num) ? '메모 수정' : '메모'}
                     </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: colors.pillBg }]}
+                    onPress={() => {
+                      Share.share({
+                        message: `"${selectedVerse.text}"\n— ${book.name} ${chapter}:${selectedVerse.num} (힐링성경)`,
+                      });
+                    }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>공유</Text>
                   </TouchableOpacity>
                 </View>
 
