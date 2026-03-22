@@ -26,6 +26,12 @@ export default function BibleScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Custom header */}
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>힐링성경</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>개역한글</Text>
+      </View>
+
       {/* Continue reading */}
       {lastRead && bookById[lastRead.bookId] && (
         <TouchableOpacity
@@ -107,6 +113,21 @@ export default function BibleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  header: {
+    paddingTop: 56,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  headerTitle: {
+    fontSize: fonts.sizes.hero,
+    fontWeight: fonts.weights.bold,
+  },
+  headerSubtitle: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.medium,
+    marginTop: 2,
+    letterSpacing: 1,
+  },
   continueCard: {
     flexDirection: 'row',
     alignItems: 'center',

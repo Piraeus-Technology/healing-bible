@@ -36,7 +36,7 @@ function BibleStackNavigator() {
       <BibleStack.Screen
         name="BibleHome"
         component={BibleScreen}
-        options={{ title: '성경' }}
+        options={{ headerShown: false }}
       />
       <BibleStack.Screen
         name="ChapterSelect"
