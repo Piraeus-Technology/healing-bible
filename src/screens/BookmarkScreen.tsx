@@ -14,11 +14,14 @@ import { useNavigation } from '@react-navigation/native';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { bookById } from '../data/books';
+import { getVerse } from '../data/bible';
+import { useSettingsStore } from '../store/settingsStore';
 
 export default function BookmarkScreen() {
   const colors = useColors();
   const navigation = useNavigation<any>();
   const { bookmarks, loadBookmarks, removeBookmark } = useBookmarkStore();
+  const { translation } = useSettingsStore();
 
   useEffect(() => {
     loadBookmarks();
@@ -44,7 +47,8 @@ export default function BookmarkScreen() {
 
   const renderItem = ({ item }: { item: typeof bookmarks[0] }) => {
     const book = bookById[item.book];
-    const bookName = book?.name || item.book;
+    const bookName = translation === 'kjv' ? (book?.nameEn || item.book) : (book?.name || item.book);
+    const displayText = getVerse(item.book, item.chapter, item.verse, translation) || item.text;
 
     return (
       <Swipeable
@@ -67,7 +71,7 @@ export default function BookmarkScreen() {
             </Text>
           </View>
           <Text style={[styles.verseText, { color: colors.textPrimary }]} numberOfLines={2}>
-            {item.text}
+            {displayText}
           </Text>
           <Text style={[styles.dateText, { color: colors.textMuted }]}>
             {new Date(item.createdAt).toLocaleDateString('ko-KR')}

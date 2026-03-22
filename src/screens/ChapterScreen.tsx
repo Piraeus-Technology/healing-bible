@@ -41,7 +41,7 @@ export default function ChapterScreen() {
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
   const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
   const { getNote, saveNote, deleteNote, loadNotes } = useNoteStore();
-  const { fontSize, translation, loadSettings, setLastRead } = useSettingsStore();
+  const { fontSize, translation, loadSettings, setLastRead, setTranslation } = useSettingsStore();
 
   const verses = getChapter(bookId, chapter, translation);
 
@@ -68,8 +68,21 @@ export default function ChapterScreen() {
     const suffix = translation === 'kjv' ? '' : '장';
     navigation.setOptions({
       title: `${name} ${chapter}${suffix}`,
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setTranslation(translation === 'kjv' ? 'krv' : 'kjv');
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
+            {translation === 'kjv' ? '한글' : 'KJV'}
+          </Text>
+        </TouchableOpacity>
+      ),
     });
-  }, [navigation, book, chapter, translation]);
+  }, [navigation, book, chapter, translation, colors]);
 
   const highlightColorMap: Record<HighlightColor, string> = {
     yellow: colors.highlightYellow,
