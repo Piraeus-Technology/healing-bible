@@ -34,7 +34,7 @@ export default function BibleScreen() {
         <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>{translationLabels[translation]}</Text>
       </View>
 
-      {/* Verse of the day */}
+      {/* Verse of the day — compact */}
       {(() => {
         const votd = getVerseOfTheDay();
         const vBook = bookById[votd.bookId];
@@ -46,14 +46,12 @@ export default function BibleScreen() {
             onPress={() => navigation.navigate('Chapter', { bookId: votd.bookId, chapter: votd.chapter })}
             activeOpacity={0.7}
           >
-            <Text style={[styles.votdLabel, { color: colors.accent }]}>
-              {translation === 'kjv' ? 'VERSE OF THE DAY' : '오늘의 말씀'}
-            </Text>
-            <Text style={[styles.votdText, { color: colors.textPrimary }]} numberOfLines={2}>
+            <Ionicons name="sunny-outline" size={16} color={colors.accent} />
+            <Text style={[styles.votdText, { color: colors.textSecondary }]} numberOfLines={1}>
               "{vText}"
             </Text>
             <Text style={[styles.votdRef, { color: colors.primary }]}>
-              — {vName} {votd.chapter}:{votd.verse}
+              {vName} {votd.chapter}:{votd.verse}
             </Text>
           </TouchableOpacity>
         );
@@ -158,30 +156,22 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   votdCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginHorizontal: spacing.md,
     marginTop: spacing.sm,
-    padding: spacing.md,
+    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  votdLabel: {
-    fontSize: fonts.sizes.xs,
-    fontWeight: fonts.weights.bold,
-    letterSpacing: 1,
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   votdText: {
-    fontSize: fonts.sizes.md,
+    flex: 1,
+    fontSize: fonts.sizes.sm,
     fontStyle: 'italic',
-    lineHeight: 24,
-    marginBottom: spacing.xs,
   },
   votdRef: {
-    fontSize: fonts.sizes.sm,
+    fontSize: fonts.sizes.xs,
     fontWeight: fonts.weights.semibold,
   },
   continueCard: {
