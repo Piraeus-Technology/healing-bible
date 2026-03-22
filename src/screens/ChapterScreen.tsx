@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   TouchableOpacity,
   Modal,
   StyleSheet,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +19,7 @@ import { bookById } from '../data/books';
 import { getChapter } from '../data/bible';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { useHighlightStore, HighlightColor } from '../store/highlightStore';
+import { useNoteStore } from '../store/noteStore';
 
 const highlightOptions: { color: HighlightColor; label: string }[] = [
   { color: 'yellow', label: '노랑' },
@@ -34,12 +38,16 @@ export default function ChapterScreen() {
 
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
   const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
+  const { getNote, saveNote, deleteNote, loadNotes } = useNoteStore();
 
   const [selectedVerse, setSelectedVerse] = useState<{ num: number; text: string } | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [showNoteInput, setShowNoteInput] = useState(false);
 
   React.useEffect(() => {
     loadBookmarks();
     loadHighlights();
+    loadNotes();
   }, []);
 
   React.useLayoutEffect(() => {
@@ -69,6 +77,8 @@ export default function ChapterScreen() {
   const handleVerseTap = (verseNum: number, text: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedVerse({ num: verseNum, text });
+    setNoteText(getNote(bookId, chapter, verseNum) || '');
+    setShowNoteInput(false);
   };
 
   const handleHighlight = (color: HighlightColor) => {
@@ -97,6 +107,17 @@ export default function ChapterScreen() {
   const handleRemoveHighlight = () => {
     if (!selectedVerse) return;
     removeHighlight(bookId, chapter, selectedVerse.num);
+    setSelectedVerse(null);
+  };
+
+  const handleSaveNote = () => {
+    if (!selectedVerse) return;
+    if (noteText.trim()) {
+      saveNote(bookId, chapter, selectedVerse.num, noteText.trim());
+    } else {
+      deleteNote(bookId, chapter, selectedVerse.num);
+    }
+    setShowNoteInput(false);
     setSelectedVerse(null);
   };
 
@@ -155,6 +176,7 @@ export default function ChapterScreen() {
             const verseNum = i + 1;
             const highlight = getHighlight(bookId, chapter, verseNum);
             const bookmarked = isBookmarked(bookId, chapter, verseNum);
+            const hasNote = !!getNote(bookId, chapter, verseNum);
 
             return (
               <TouchableOpacity
@@ -172,14 +194,14 @@ export default function ChapterScreen() {
                 <Text style={[styles.verseText, { color: colors.textPrimary }]}>
                   {text}
                 </Text>
-                {bookmarked && (
-                  <Ionicons
-                    name="bookmark"
-                    size={14}
-                    color={colors.bookmarkColor}
-                    style={styles.bookmarkIcon}
-                  />
-                )}
+                <View style={styles.verseIcons}>
+                  {hasNote && (
+                    <Ionicons name="chatbubble" size={12} color={colors.primary} />
+                  )}
+                  {bookmarked && (
+                    <Ionicons name="bookmark" size={14} color={colors.bookmarkColor} />
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -218,6 +240,7 @@ export default function ChapterScreen() {
         animationType="fade"
         onRequestClose={() => setSelectedVerse(null)}
       >
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedVerse(null)}>
           <Pressable style={[styles.modalContent, { backgroundColor: colors.card }]}>
             {selectedVerse && (
@@ -273,11 +296,61 @@ export default function ChapterScreen() {
                       {isBookmarked(bookId, chapter, selectedVerse.num) ? '책갈피 삭제' : '책갈피'}
                     </Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: colors.pillBg }]}
+                    onPress={() => setShowNoteInput(!showNoteInput)}
+                  >
+                    <Ionicons
+                      name={getNote(bookId, chapter, selectedVerse.num) ? 'chatbubble' : 'chatbubble-outline'}
+                      size={20}
+                      color={getNote(bookId, chapter, selectedVerse.num) ? colors.primary : colors.textSecondary}
+                    />
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>
+                      {getNote(bookId, chapter, selectedVerse.num) ? '메모 수정' : '메모'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+
+                {/* Note input */}
+                {showNoteInput && (
+                  <View style={styles.noteSection}>
+                    <TextInput
+                      style={[styles.noteInput, { color: colors.textPrimary, backgroundColor: colors.pillBg, borderColor: colors.border }]}
+                      placeholder="메모를 입력하세요..."
+                      placeholderTextColor={colors.textMuted}
+                      value={noteText}
+                      onChangeText={setNoteText}
+                      multiline
+                      autoFocus
+                    />
+                    <View style={styles.noteActions}>
+                      {getNote(bookId, chapter, selectedVerse.num) && (
+                        <TouchableOpacity
+                          style={[styles.noteButton, { backgroundColor: '#FFEBEE' }]}
+                          onPress={() => {
+                            deleteNote(bookId, chapter, selectedVerse.num);
+                            setNoteText('');
+                            setShowNoteInput(false);
+                            setSelectedVerse(null);
+                          }}
+                        >
+                          <Text style={[styles.noteButtonText, { color: '#C62828' }]}>삭제</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={[styles.noteButton, { backgroundColor: colors.primary }]}
+                        onPress={handleSaveNote}
+                      >
+                        <Text style={[styles.noteButtonText, { color: '#fff' }]}>저장</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </>
             )}
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -325,9 +398,12 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     flex: 1,
   },
-  bookmarkIcon: {
+  verseIcons: {
+    flexDirection: 'column',
+    alignItems: 'center',
     marginLeft: spacing.xs,
     marginTop: 4,
+    gap: 2,
   },
   navRow: {
     flexDirection: 'row',
@@ -418,5 +494,32 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.medium,
+  },
+  noteSection: {
+    marginTop: spacing.md,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    fontSize: fonts.sizes.md,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    lineHeight: 22,
+  },
+  noteActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  noteButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  noteButtonText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.semibold,
   },
 });
