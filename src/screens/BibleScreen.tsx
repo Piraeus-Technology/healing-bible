@@ -11,8 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { oldTestament, newTestament, bookById } from '../data/books';
 import { useSettingsStore, translationLabels } from '../store/settingsStore';
-import { getVerseOfTheDay } from '../data/dailyVerses';
-import { getVerse } from '../data/bible';
 
 export default function BibleScreen() {
   const colors = useColors();
@@ -33,29 +31,6 @@ export default function BibleScreen() {
         <Text style={[styles.headerTitle, { color: colors.primary }]}>힐링성경</Text>
         <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>{translationLabels[translation]}</Text>
       </View>
-
-      {/* Verse of the day — compact */}
-      {(() => {
-        const votd = getVerseOfTheDay();
-        const vBook = bookById[votd.bookId];
-        const vText = getVerse(votd.bookId, votd.chapter, votd.verse, translation) || '';
-        const vName = translation === 'kjv' ? vBook?.nameEn : vBook?.name;
-        return (
-          <TouchableOpacity
-            style={[styles.votdCard, { backgroundColor: colors.card }]}
-            onPress={() => navigation.navigate('Chapter', { bookId: votd.bookId, chapter: votd.chapter })}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="sunny-outline" size={16} color={colors.accent} />
-            <Text style={[styles.votdText, { color: colors.textSecondary }]} numberOfLines={1}>
-              "{vText}"
-            </Text>
-            <Text style={[styles.votdRef, { color: colors.primary }]}>
-              {vName} {votd.chapter}:{votd.verse}
-            </Text>
-          </TouchableOpacity>
-        );
-      })()}
 
       {/* Continue reading */}
       {lastRead && bookById[lastRead.bookId] && (
@@ -154,25 +129,6 @@ const styles = StyleSheet.create({
     fontWeight: fonts.weights.medium,
     marginTop: 2,
     letterSpacing: 1,
-  },
-  votdCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    padding: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  votdText: {
-    flex: 1,
-    fontSize: fonts.sizes.sm,
-    fontStyle: 'italic',
-  },
-  votdRef: {
-    fontSize: fonts.sizes.xs,
-    fontWeight: fonts.weights.semibold,
   },
   continueCard: {
     flexDirection: 'row',
