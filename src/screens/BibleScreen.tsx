@@ -69,7 +69,7 @@ export default function BibleScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.bookCard, { backgroundColor: colors.card }]}
-            onPress={() => navigation.navigate('Chapter', { bookId: item.id, chapter: 1 })}
+            onPress={() => navigation.navigate('ChapterSelect', { bookId: item.id })}
             activeOpacity={0.7}
           >
             <Text style={[styles.bookName, { color: colors.textPrimary }]}>{item.name}</Text>

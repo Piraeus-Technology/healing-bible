@@ -2,6 +2,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
   MainTabs: undefined;
+  ChapterSelect: {
+    bookId: string;
+  };
   Chapter: {
     bookId: string;
     chapter: number;

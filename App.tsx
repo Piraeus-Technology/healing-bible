@@ -10,6 +10,7 @@ import { useColors, fonts } from './src/utils/theme';
 import { useThemeStore } from './src/store/themeStore';
 
 import BibleScreen from './src/screens/BibleScreen';
+import ChapterSelectScreen from './src/screens/ChapterSelectScreen';
 import ChapterScreen from './src/screens/ChapterScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import HealingScreen from './src/screens/HealingScreen';
@@ -107,6 +108,11 @@ export default function App() {
             name="MainTabs"
             component={TabNavigator}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChapterSelect"
+            component={ChapterSelectScreen}
+            options={{ title: '' }}
           />
           <Stack.Screen
             name="Chapter"
