@@ -15,6 +15,7 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { bookById } from '../data/books';
 import { getChapter } from '../data/bible';
@@ -324,6 +325,17 @@ export default function ChapterScreen() {
                   >
                     <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
                     <Text style={[styles.actionText, { color: colors.textPrimary }]}>공유</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: colors.pillBg }]}
+                    onPress={async () => {
+                      await Clipboard.setStringAsync(`${selectedVerse.text}\n— ${book.name} ${chapter}:${selectedVerse.num}`);
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      setSelectedVerse(null);
+                    }}
+                  >
+                    <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>복사</Text>
                   </TouchableOpacity>
                 </View>
 
