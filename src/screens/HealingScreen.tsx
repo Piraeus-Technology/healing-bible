@@ -13,15 +13,18 @@ import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { getVerseOfTheDay } from '../data/dailyVerses';
 import { getVerse } from '../data/bible';
 import { bookById } from '../data/books';
+import { useSettingsStore } from '../store/settingsStore';
 
 export default function HealingScreen() {
   const colors = useColors();
   const navigation = useNavigation<any>();
+  const { translation } = useSettingsStore();
 
   const votd = getVerseOfTheDay();
   const book = bookById[votd.bookId];
-  const verseText = getVerse(votd.bookId, votd.chapter, votd.verse) || '';
-  const reference = `${book?.name} ${votd.chapter}:${votd.verse}`;
+  const verseText = getVerse(votd.bookId, votd.chapter, votd.verse, translation) || '';
+  const bookName = translation === 'kjv' ? book?.nameEn : book?.name;
+  const reference = `${bookName} ${votd.chapter}:${votd.verse}`;
 
   return (
     <ScrollView
