@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  Modal,
   StyleSheet,
+  Pressable,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,13 @@ import { getChapter } from '../data/bible';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { useHighlightStore, HighlightColor } from '../store/highlightStore';
 
+const highlightOptions: { color: HighlightColor; label: string }[] = [
+  { color: 'yellow', label: '노랑' },
+  { color: 'green', label: '초록' },
+  { color: 'blue', label: '파랑' },
+  { color: 'pink', label: '분홍' },
+];
+
 export default function ChapterScreen() {
   const colors = useColors();
   const route = useRoute<any>();
@@ -24,7 +33,9 @@ export default function ChapterScreen() {
   const verses = getChapter(bookId, chapter);
 
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
-  const { getHighlight, loadHighlights } = useHighlightStore();
+  const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
+
+  const [selectedVerse, setSelectedVerse] = useState<{ num: number; text: string } | null>(null);
 
   React.useEffect(() => {
     loadBookmarks();
@@ -44,8 +55,49 @@ export default function ChapterScreen() {
     pink: colors.highlightPink,
   };
 
+  const rawHighlightColors: Record<HighlightColor, string> = {
+    yellow: '#FFF176',
+    green: '#A5D6A7',
+    blue: '#90CAF9',
+    pink: '#F48FB1',
+  };
+
   const goToChapter = (ch: number) => {
     navigation.replace('Chapter', { bookId, chapter: ch });
+  };
+
+  const handleVerseTap = (verseNum: number, text: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedVerse({ num: verseNum, text });
+  };
+
+  const handleHighlight = (color: HighlightColor) => {
+    if (!selectedVerse) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const current = getHighlight(bookId, chapter, selectedVerse.num);
+    if (current === color) {
+      removeHighlight(bookId, chapter, selectedVerse.num);
+    } else {
+      setHighlight(bookId, chapter, selectedVerse.num, color);
+    }
+    setSelectedVerse(null);
+  };
+
+  const handleBookmarkToggle = () => {
+    if (!selectedVerse) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (isBookmarked(bookId, chapter, selectedVerse.num)) {
+      removeBookmark(bookId, chapter, selectedVerse.num);
+    } else {
+      addBookmark({ book: bookId, chapter, verse: selectedVerse.num, text: selectedVerse.text });
+    }
+    setSelectedVerse(null);
+  };
+
+  const handleRemoveHighlight = () => {
+    if (!selectedVerse) return;
+    removeHighlight(bookId, chapter, selectedVerse.num);
+    setSelectedVerse(null);
   };
 
   if (!book) {
@@ -63,7 +115,6 @@ export default function ChapterScreen() {
         <Text style={[styles.emptyText, { color: colors.textMuted }]}>
           본문 준비 중입니다
         </Text>
-        {/* Chapter navigation */}
         <View style={styles.navRow}>
           {chapter > 1 && (
             <TouchableOpacity
@@ -89,82 +140,146 @@ export default function ChapterScreen() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Chapter header */}
-      <View style={styles.chapterHeader}>
-        <Text style={[styles.chapterTitle, { color: colors.primary }]}>
-          {book.name} {chapter}장
-        </Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView style={styles.container}>
+        {/* Chapter header */}
+        <View style={styles.chapterHeader}>
+          <Text style={[styles.chapterTitle, { color: colors.primary }]}>
+            {book.name} {chapter}장
+          </Text>
+        </View>
 
-      {/* Verses */}
-      <View style={styles.versesContainer}>
-        {verses.map((text, i) => {
-          const verseNum = i + 1;
-          const highlight = getHighlight(bookId, chapter, verseNum);
-          const bookmarked = isBookmarked(bookId, chapter, verseNum);
+        {/* Verses */}
+        <View style={styles.versesContainer}>
+          {verses.map((text, i) => {
+            const verseNum = i + 1;
+            const highlight = getHighlight(bookId, chapter, verseNum);
+            const bookmarked = isBookmarked(bookId, chapter, verseNum);
 
-          return (
+            return (
+              <TouchableOpacity
+                key={verseNum}
+                style={[
+                  styles.verseRow,
+                  highlight && { backgroundColor: highlightColorMap[highlight] },
+                ]}
+                onPress={() => handleVerseTap(verseNum, text)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.verseNumber, { color: colors.primary }]}>
+                  {verseNum}
+                </Text>
+                <Text style={[styles.verseText, { color: colors.textPrimary }]}>
+                  {text}
+                </Text>
+                {bookmarked && (
+                  <Ionicons
+                    name="bookmark"
+                    size={14}
+                    color={colors.bookmarkColor}
+                    style={styles.bookmarkIcon}
+                  />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Chapter navigation */}
+        <View style={styles.navRow}>
+          {chapter > 1 && (
             <TouchableOpacity
-              key={verseNum}
-              style={[
-                styles.verseRow,
-                highlight && { backgroundColor: highlightColorMap[highlight] },
-              ]}
-              onLongPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                if (bookmarked) {
-                  removeBookmark(bookId, chapter, verseNum);
-                } else {
-                  addBookmark({ book: bookId, chapter, verse: verseNum, text });
-                }
-              }}
-              activeOpacity={0.8}
+              style={[styles.navButton, { backgroundColor: colors.card }]}
+              onPress={() => goToChapter(chapter - 1)}
             >
-              <Text style={[styles.verseNumber, { color: colors.primary }]}>
-                {verseNum}
-              </Text>
-              <Text style={[styles.verseText, { color: colors.textPrimary }]}>
-                {text}
-              </Text>
-              {bookmarked && (
-                <Ionicons
-                  name="bookmark"
-                  size={14}
-                  color={colors.bookmarkColor}
-                  style={styles.bookmarkIcon}
-                />
-              )}
+              <Ionicons name="chevron-back" size={18} color={colors.primary} />
+              <Text style={[styles.navText, { color: colors.primary }]}>이전 장</Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          )}
+          <View style={{ flex: 1 }} />
+          {chapter < book.chapters && (
+            <TouchableOpacity
+              style={[styles.navButton, { backgroundColor: colors.card }]}
+              onPress={() => goToChapter(chapter + 1)}
+            >
+              <Text style={[styles.navText, { color: colors.primary }]}>다음 장</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Chapter navigation */}
-      <View style={styles.navRow}>
-        {chapter > 1 && (
-          <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.card }]}
-            onPress={() => goToChapter(chapter - 1)}
-          >
-            <Ionicons name="chevron-back" size={18} color={colors.primary} />
-            <Text style={[styles.navText, { color: colors.primary }]}>이전 장</Text>
-          </TouchableOpacity>
-        )}
-        <View style={{ flex: 1 }} />
-        {chapter < book.chapters && (
-          <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.card }]}
-            onPress={() => goToChapter(chapter + 1)}
-          >
-            <Text style={[styles.navText, { color: colors.primary }]}>다음 장</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-          </TouchableOpacity>
-        )}
-      </View>
+        <View style={{ height: spacing.xl }} />
+      </ScrollView>
 
-      <View style={{ height: spacing.xl }} />
-    </ScrollView>
+      {/* Verse action modal */}
+      <Modal
+        visible={selectedVerse !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedVerse(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setSelectedVerse(null)}>
+          <Pressable style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            {selectedVerse && (
+              <>
+                <Text style={[styles.modalReference, { color: colors.primary }]}>
+                  {book.name} {chapter}:{selectedVerse.num}
+                </Text>
+                <Text style={[styles.modalVerse, { color: colors.textPrimary }]} numberOfLines={3}>
+                  {selectedVerse.text}
+                </Text>
+
+                {/* Highlight colors */}
+                <Text style={[styles.modalLabel, { color: colors.textMuted }]}>형광펜</Text>
+                <View style={styles.colorRow}>
+                  {highlightOptions.map((opt) => {
+                    const isActive = getHighlight(bookId, chapter, selectedVerse.num) === opt.color;
+                    return (
+                      <TouchableOpacity
+                        key={opt.color}
+                        style={[
+                          styles.colorButton,
+                          { backgroundColor: rawHighlightColors[opt.color] },
+                          isActive && styles.colorButtonActive,
+                        ]}
+                        onPress={() => handleHighlight(opt.color)}
+                      >
+                        {isActive && <Ionicons name="checkmark" size={18} color="#333" />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {getHighlight(bookId, chapter, selectedVerse.num) && (
+                    <TouchableOpacity
+                      style={[styles.colorButton, { backgroundColor: colors.pillBg }]}
+                      onPress={handleRemoveHighlight}
+                    >
+                      <Ionicons name="close" size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Actions */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: colors.pillBg }]}
+                    onPress={handleBookmarkToggle}
+                  >
+                    <Ionicons
+                      name={isBookmarked(bookId, chapter, selectedVerse.num) ? 'bookmark' : 'bookmark-outline'}
+                      size={20}
+                      color={isBookmarked(bookId, chapter, selectedVerse.num) ? colors.bookmarkColor : colors.textSecondary}
+                    />
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>
+                      {isBookmarked(bookId, chapter, selectedVerse.num) ? '책갈피 삭제' : '책갈피'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
 
@@ -237,5 +352,71 @@ const styles = StyleSheet.create({
   navText: {
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.semibold,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl + 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalReference: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.bold,
+    marginBottom: spacing.xs,
+  },
+  modalVerse: {
+    fontSize: fonts.sizes.md,
+    lineHeight: 24,
+    marginBottom: spacing.md,
+  },
+  modalLabel: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: fonts.weights.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  colorButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  colorButtonActive: {
+    borderWidth: 3,
+    borderColor: '#333',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+  },
+  actionText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.medium,
   },
 });
