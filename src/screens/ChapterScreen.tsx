@@ -37,12 +37,13 @@ export default function ChapterScreen() {
   const navigation = useNavigation<any>();
   const { bookId, chapter } = route.params;
   const book = bookById[bookId];
-  const verses = getChapter(bookId, chapter);
 
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
   const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
   const { getNote, saveNote, deleteNote, loadNotes } = useNoteStore();
-  const { fontSize, loadSettings, setLastRead } = useSettingsStore();
+  const { fontSize, translation, loadSettings, setLastRead } = useSettingsStore();
+
+  const verses = getChapter(bookId, chapter, translation);
 
   const [selectedVerse, setSelectedVerse] = useState<{ num: number; text: string } | null>(null);
   const [noteText, setNoteText] = useState('');

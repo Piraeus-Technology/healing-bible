@@ -15,14 +15,14 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { useThemeStore } from '../store/themeStore';
-import { useSettingsStore } from '../store/settingsStore';
+import { useSettingsStore, translationLabels, BibleTranslation } from '../store/settingsStore';
 
 const APP_VERSION = '1.0.0';
 
 export default function MoreScreen() {
   const colors = useColors();
   const { isDark, toggleTheme } = useThemeStore();
-  const { fontSize, setFontSize, loadSettings } = useSettingsStore();
+  const { fontSize, translation, setFontSize, setTranslation, loadSettings } = useSettingsStore();
 
   React.useEffect(() => {
     loadSettings();
@@ -83,6 +83,35 @@ export default function MoreScreen() {
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      {/* 번역 선택 */}
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: spacing.lg }]}>
+        성경 번역
+      </Text>
+      <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+        {(['krv', 'kjv'] as BibleTranslation[]).map((t, i, arr) => (
+          <TouchableOpacity
+            key={t}
+            style={[
+              styles.settingRow,
+              i === arr.length - 1 && { borderBottomWidth: 0 },
+              { borderBottomColor: colors.divider },
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setTranslation(t);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>
+              {translationLabels[t]}
+            </Text>
+            {translation === t && (
+              <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* 지원 */}

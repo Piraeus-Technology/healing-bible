@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { searchBible, SearchResult } from '../utils/search';
+import { useSettingsStore } from '../store/settingsStore';
 
 function highlightText(text: string, query: string, primaryColor: string, textColor: string) {
   if (!query.trim()) return <Text style={{ color: textColor }}>{text}</Text>;
@@ -34,12 +35,13 @@ function highlightText(text: string, query: string, primaryColor: string, textCo
 export default function SearchScreen() {
   const colors = useColors();
   const navigation = useNavigation<any>();
+  const { translation } = useSettingsStore();
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
     if (query.trim().length < 2) return [];
-    return searchBible(query);
-  }, [query]);
+    return searchBible(query, translation);
+  }, [query, translation]);
 
   const renderItem = ({ item }: { item: SearchResult }) => (
     <TouchableOpacity

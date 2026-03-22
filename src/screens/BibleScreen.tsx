@@ -10,13 +10,13 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { oldTestament, newTestament, bookById } from '../data/books';
-import { useSettingsStore } from '../store/settingsStore';
+import { useSettingsStore, translationLabels } from '../store/settingsStore';
 
 export default function BibleScreen() {
   const colors = useColors();
   const navigation = useNavigation<any>();
   const [testament, setTestament] = useState<'old' | 'new'>('old');
-  const { lastRead, loadSettings } = useSettingsStore();
+  const { lastRead, translation, loadSettings } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
@@ -29,7 +29,7 @@ export default function BibleScreen() {
       {/* Custom header */}
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <Text style={[styles.headerTitle, { color: colors.primary }]}>힐링성경</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>개역한글</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>{translationLabels[translation]}</Text>
       </View>
 
       {/* Continue reading */}

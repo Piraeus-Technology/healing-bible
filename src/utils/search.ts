@@ -1,5 +1,6 @@
 import { books } from '../data/books';
 import { getChapter } from '../data/bible';
+import type { BibleTranslation } from '../store/settingsStore';
 
 export interface SearchResult {
   bookId: string;
@@ -9,18 +10,18 @@ export interface SearchResult {
   text: string;
 }
 
-// Lazy-built search index
-let searchIndex: SearchResult[] | null = null;
+// Separate indexes per translation
+const indexes: Record<string, SearchResult[]> = {};
 
-function buildIndex(): SearchResult[] {
-  if (searchIndex) return searchIndex;
-  searchIndex = [];
+function buildIndex(translation: BibleTranslation): SearchResult[] {
+  if (indexes[translation]) return indexes[translation];
+  indexes[translation] = [];
   books.forEach((book) => {
     for (let ch = 1; ch <= book.chapters; ch++) {
-      const verses = getChapter(book.id, ch);
+      const verses = getChapter(book.id, ch, translation);
       if (!verses) continue;
       verses.forEach((text, i) => {
-        searchIndex!.push({
+        indexes[translation].push({
           bookId: book.id,
           bookName: book.name,
           chapter: ch,
@@ -30,12 +31,12 @@ function buildIndex(): SearchResult[] {
       });
     }
   });
-  return searchIndex;
+  return indexes[translation];
 }
 
-export function searchBible(query: string, maxResults: number = 50): SearchResult[] {
+export function searchBible(query: string, translation: BibleTranslation = 'krv', maxResults: number = 50): SearchResult[] {
   if (!query.trim()) return [];
-  const index = buildIndex();
+  const index = buildIndex(translation);
   const q = query.trim().toLowerCase();
   const results: SearchResult[] = [];
 
