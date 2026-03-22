@@ -12,14 +12,21 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { useThemeStore } from '../store/themeStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 const APP_VERSION = '1.0.0';
 
 export default function MoreScreen() {
   const colors = useColors();
   const { isDark, toggleTheme } = useThemeStore();
+  const { fontSize, setFontSize, loadSettings } = useSettingsStore();
+
+  React.useEffect(() => {
+    loadSettings();
+  }, []);
 
   const handleSendEmail = () => {
     const subject = encodeURIComponent('힐링성경 피드백');
@@ -46,6 +53,35 @@ export default function MoreScreen() {
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor="#fff"
           />
+        </View>
+        <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+          <Ionicons name="text" size={20} color={colors.textSecondary} />
+          <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>글자 크기</Text>
+          <View style={styles.fontSizeControls}>
+            <TouchableOpacity
+              style={[styles.fontSizeButton, { backgroundColor: colors.pillBg }]}
+              onPress={() => {
+                if (fontSize > 14) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setFontSize(fontSize - 2);
+                }
+              }}
+            >
+              <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600' }}>가</Text>
+            </TouchableOpacity>
+            <Text style={[styles.fontSizeValue, { color: colors.textPrimary }]}>{fontSize}</Text>
+            <TouchableOpacity
+              style={[styles.fontSizeButton, { backgroundColor: colors.pillBg }]}
+              onPress={() => {
+                if (fontSize < 32) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setFontSize(fontSize + 2);
+                }
+              }}
+            >
+              <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: '600' }}>가</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -120,6 +156,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: fonts.sizes.md,
     fontWeight: fonts.weights.medium,
+  },
+  fontSizeControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  fontSizeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fontSizeValue: {
+    fontSize: fonts.sizes.md,
+    fontWeight: fonts.weights.semibold,
+    minWidth: 28,
+    textAlign: 'center',
   },
   rowCard: {
     flexDirection: 'row',

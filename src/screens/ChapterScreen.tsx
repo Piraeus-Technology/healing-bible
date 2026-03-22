@@ -20,6 +20,7 @@ import { getChapter } from '../data/bible';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { useHighlightStore, HighlightColor } from '../store/highlightStore';
 import { useNoteStore } from '../store/noteStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 const highlightOptions: { color: HighlightColor; label: string }[] = [
   { color: 'yellow', label: '노랑' },
@@ -39,6 +40,7 @@ export default function ChapterScreen() {
   const { isBookmarked, addBookmark, removeBookmark, loadBookmarks } = useBookmarkStore();
   const { getHighlight, setHighlight, removeHighlight, loadHighlights } = useHighlightStore();
   const { getNote, saveNote, deleteNote, loadNotes } = useNoteStore();
+  const { fontSize, loadSettings } = useSettingsStore();
 
   const [selectedVerse, setSelectedVerse] = useState<{ num: number; text: string } | null>(null);
   const [noteText, setNoteText] = useState('');
@@ -48,6 +50,7 @@ export default function ChapterScreen() {
     loadBookmarks();
     loadHighlights();
     loadNotes();
+    loadSettings();
   }, []);
 
   React.useLayoutEffect(() => {
@@ -191,7 +194,7 @@ export default function ChapterScreen() {
                 <Text style={[styles.verseNumber, { color: colors.primary }]}>
                   {verseNum}
                 </Text>
-                <Text style={[styles.verseText, { color: colors.textPrimary }]}>
+                <Text style={[styles.verseText, { color: colors.textPrimary, fontSize, lineHeight: fontSize * 1.6 }]}>
                   {text}
                 </Text>
                 <View style={styles.verseIcons}>
