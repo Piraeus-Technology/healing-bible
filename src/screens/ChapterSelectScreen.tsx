@@ -24,23 +24,32 @@ export default function ChapterSelectScreen() {
   if (!book) return null;
 
   const chapters = Array.from({ length: book.chapters }, (_, i) => i + 1);
+  // Add invisible spacers to fill the last row
+  const remainder = chapters.length % 5;
+  const spacers = remainder > 0 ? 5 - remainder : 0;
+  const data = [...chapters, ...Array.from({ length: spacers }, (_, i) => -(i + 1))];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <FlatList
-        data={chapters}
+        data={data}
         keyExtractor={(item) => String(item)}
         numColumns={5}
         contentContainerStyle={styles.grid}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.chapterButton, { backgroundColor: colors.card }]}
-            onPress={() => navigation.navigate('Chapter', { bookId, chapter: item })}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.chapterText, { color: colors.textPrimary }]}>{item}</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          if (item < 0) {
+            return <View style={styles.chapterButton} />;
+          }
+          return (
+            <TouchableOpacity
+              style={[styles.chapterButton, { backgroundColor: colors.card }]}
+              onPress={() => navigation.navigate('Chapter', { bookId, chapter: item })}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.chapterText, { color: colors.textPrimary }]}>{item}</Text>
+            </TouchableOpacity>
+          );
+        }}
       />
     </View>
   );
@@ -54,15 +63,10 @@ const styles = StyleSheet.create({
   chapterButton: {
     flex: 1,
     margin: spacing.xs,
-    aspectRatio: 1,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   chapterText: {
     fontSize: fonts.sizes.lg,
