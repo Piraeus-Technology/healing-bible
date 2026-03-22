@@ -9,6 +9,7 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useColors, fonts, spacing, radius } from '../utils/theme';
 import { bookById } from '../data/books';
+import { useSettingsStore } from '../store/settingsStore';
 
 export default function ChapterSelectScreen() {
   const colors = useColors();
@@ -16,10 +17,12 @@ export default function ChapterSelectScreen() {
   const navigation = useNavigation<any>();
   const { bookId } = route.params;
   const book = bookById[bookId];
+  const { translation } = useSettingsStore();
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({ title: book?.name || '' });
-  }, [navigation, book]);
+    const title = translation === 'kjv' ? book?.nameEn : book?.name;
+    navigation.setOptions({ title: title || '' });
+  }, [navigation, book, translation]);
 
   if (!book) return null;
 

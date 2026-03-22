@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -49,6 +49,9 @@ export default function ChapterScreen() {
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
 
+  // Swipe gesture tracking
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
   React.useEffect(() => {
     loadBookmarks();
     loadHighlights();
@@ -61,10 +64,12 @@ export default function ChapterScreen() {
   }, [bookId, chapter]);
 
   React.useLayoutEffect(() => {
+    const name = translation === 'kjv' ? book?.nameEn : book?.name;
+    const suffix = translation === 'kjv' ? '' : '장';
     navigation.setOptions({
-      title: `${book?.name} ${chapter}장`,
+      title: `${name} ${chapter}${suffix}`,
     });
-  }, [navigation, book, chapter]);
+  }, [navigation, book, chapter, translation]);
 
   const highlightColorMap: Record<HighlightColor, string> = {
     yellow: colors.highlightYellow,
@@ -172,13 +177,37 @@ export default function ChapterScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView style={styles.container}>
-        {/* Chapter header */}
-        <View style={styles.chapterHeader}>
+      <ScrollView
+        style={styles.container}
+        onTouchStart={(e) => {
+          touchStart.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+        }}
+        onTouchEnd={(e) => {
+          if (!touchStart.current || selectedVerse) return;
+          const dx = e.nativeEvent.pageX - touchStart.current.x;
+          const dy = e.nativeEvent.pageY - touchStart.current.y;
+          // Only trigger if horizontal swipe is dominant and long enough
+          if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2) {
+            if (dx < 0 && chapter < book.chapters) {
+              goToChapter(chapter + 1);
+            } else if (dx > 0 && chapter > 1) {
+              goToChapter(chapter - 1);
+            }
+          }
+          touchStart.current = null;
+        }}
+      >
+        {/* Chapter header — tap to select chapter */}
+        <TouchableOpacity
+          style={styles.chapterHeader}
+          onPress={() => navigation.navigate('ChapterSelect', { bookId })}
+          activeOpacity={0.7}
+        >
           <Text style={[styles.chapterTitle, { color: colors.primary }]}>
-            {book.name} {chapter}장
+            {translation === 'kjv' ? book.nameEn : book.name} {chapter}{translation === 'kjv' ? '' : '장'}
           </Text>
-        </View>
+          <Ionicons name="chevron-down" size={18} color={colors.textMuted} style={{ marginLeft: 4 }} />
+        </TouchableOpacity>
 
         {/* Verses */}
         <View style={styles.versesContainer}>
@@ -401,9 +430,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   chapterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: spacing.lg,
     paddingBottom: spacing.md,
-    alignItems: 'center',
   },
   chapterTitle: {
     fontSize: fonts.sizes.xl,

@@ -44,7 +44,7 @@ export default function BibleScreen() {
             <View style={styles.continueInfo}>
               <Text style={[styles.continueLabel, { color: colors.textMuted }]}>이어 읽기</Text>
               <Text style={[styles.continueTitle, { color: colors.textPrimary }]}>
-                {bookById[lastRead.bookId].name} {lastRead.chapter}장
+                {translation === 'kjv' ? bookById[lastRead.bookId].nameEn : bookById[lastRead.bookId].name} {lastRead.chapter}{translation === 'kjv' ? '' : '장'}
               </Text>
             </View>
           </View>
@@ -100,9 +100,11 @@ export default function BibleScreen() {
             onPress={() => navigation.navigate('ChapterSelect', { bookId: item.id })}
             activeOpacity={0.7}
           >
-            <Text style={[styles.bookName, { color: colors.textPrimary }]}>{item.name}</Text>
+            <Text style={[styles.bookName, { color: colors.textPrimary }]}>
+              {translation === 'kjv' ? item.nameEn : item.name}
+            </Text>
             <Text style={[styles.bookChapters, { color: colors.textMuted }]}>
-              {item.chapters}장
+              {item.chapters}{translation === 'kjv' ? ' ch' : '장'}
             </Text>
           </TouchableOpacity>
         )}
